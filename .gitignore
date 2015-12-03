@@ -1,7 +1,10 @@
 
 #########
 # Created by the lovely people and robots powering https://www.gitignore.io/
-######### 
+#########
+
+# Virtual Environment Ignores
+mailing/mailenv
 
 ### Emacs ###
 # -*- mode: gitignore; -*-

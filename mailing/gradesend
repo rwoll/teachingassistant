@@ -1,0 +1,157 @@
+#!/usr/bin/env python
+import sys
+import json
+import os
+import re
+import argparse
+from gmail.gmailer import GoogleMailer
+from gmail.templating import MailTemplater
+import click
+import time
+
+
+def open_json(filepath):
+    """Open json and read into memory
+
+    :param filepath: filepath of json filepath
+    :return: parsed json in dict form
+    """
+    with open(filepath) as data_file:
+        data = json.load(data_file)
+
+    return data
+
+
+def make_submission_name(prefix, fname, lname):
+    """Makes a program submission name based on fname and lname strings.
+
+    Strips whitespace and removes non alpha-numeric characters from fname and
+    lname.
+
+    :param prefix: (str) prefix to be fixed to each directory name
+    :param fname: (str) student first name
+    :param lname: (str) student last name
+    :return: (str) Submission name properly formatted
+    """
+    prefix = prefix.strip()
+    fname = re.sub('[^a-zA-Z]', '', fname)
+    lname = re.sub('[^a-zA-Z]', '', lname)
+    return prefix + lname + fname
+
+
+def get_json_class(filepath):
+    """Read a json classroom file into memory and return it.
+
+    :param filepath: filepath to json file to be parsed
+    :return: deserialized json, None if error
+    """
+
+    if filepath is None or not os.path.isfile(filepath):
+        return None
+
+    try:
+        return open_json(filepath)
+    except:
+        return None
+
+
+def assign(args):
+    """CLI args handler for assign sub-command.
+
+    :param args: namespace of arguments from the CLI parser. See the main()
+                 method for details
+    """
+    class_file = os.path.join(os.getcwd(), 'classroom.json')
+    if args.class_file is not None:
+        class_file = args.class_file
+
+    if not os.path.isfile(class_file):
+        print('No classroom.json file found')
+        print('\tUse the --class-file flag to specify a file outside this loc')
+        sys.exit(1)
+
+    the_class = get_json_class(class_file)
+    if the_class is None:
+        print('Error parsing ' + class_file)
+        sys.exit(1)
+
+    try:
+        print('Confirm the following settings:\n')
+        print('    Labname : ' + args.labname)
+        print('    Prefix  : ' + args.prefix)
+        print('    Due     : ' + args.duedate + ' at ' + args.duetime + '\n')
+
+        for a_stu in the_class['students']:
+            print('        Student    : ' + a_stu['lname'] + ', ' + a_stu['fname'])
+            print('        Email      : ' + a_stu['email'])
+            print('        Submission : '
+                  + make_submission_name(args.prefix, a_stu['fname'], a_stu['lname']) + '\n')
+    except:
+        print('Aborting! Error encountered.')
+        sys.exit(1)
+
+    # confirm user wants to send all these emails
+    response = input('Type confirm if you would like to send the emails now: ')
+    if response == 'confirm':
+
+        gmail = GoogleMailer()
+        templater = MailTemplater(args.template_dir)
+
+        with click.progressbar(the_class['students'],
+                               length=len(the_class['students'])) as classroom:
+
+            for a_stu in classroom:
+                time.sleep(1.0)  # sleep for 1 second
+                codename = make_submission_name(
+                    args.prefix, a_stu['fname'], a_stu['lname'])
+
+                message = templater.new_assignment(a_stu['fname'],
+                                                   a_stu['lname'],
+                                                   codename,
+                                                   args.labname,
+                                                   args.duedate,
+                                                   args.duetime)
+
+                gmail.send_email(args.sender, a_stu['email'],
+                                 '[assignment] ' + args.labname, message)
+    else:
+        print('No emails sent.')
+        return None
+
+
+def main():
+    main_parser = argparse.ArgumentParser()
+    sub_parsers = main_parser.add_subparsers(help='sub command help')
+
+    # assign subparser
+    assign_parser = sub_parsers.add_parser(
+        'assign', help='used to send out assignment emails to all students')
+
+    assign_parser.add_argument(
+        'labname', type=str, help='formal name of the assignment')
+
+    assign_parser.add_argument(
+        'prefix', type=str, help='assignment prefix for submission')
+
+    assign_parser.add_argument('duedate', type=str, help='assignment due date')
+    assign_parser.add_argument('duetime', type=str, help='assignment due time')
+
+    assign_parser.add_argument(
+        '--sender', '-S', required=True, type=str,
+        help='sender\s email adress')
+
+    assign_parser.add_argument(
+        '--template-dir', '-T', required=True, type=str,
+        help='file path to the template directory')
+
+    assign_parser.add_argument('--class-file', '-F', required=False, type=str,
+                               help='filepath to the class json file')
+
+    assign_parser.set_defaults(func=assign)
+
+    args = main_parser.parse_args()
+    args.func(args)
+
+if __name__ == '__main__':
+    main()
+    sys.exit(0)
