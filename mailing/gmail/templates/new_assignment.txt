@@ -1,0 +1,65 @@
+Hi, {{ fname }} {{ lname }}!
+
+This is a reminder that {{ assignment }} is due on {{ duedate }} at {{ duetime }}.
+
+Please follow the standard export procedures to turn in your
+submission. We will grade a submission from you with the
+following name:
+
+---------
+{{ codename }}
+---------
+
+If you need to submit another version, please use the following
+names in order:
+
+---------
+{{ codename }}_V2
+{{ codename }}_V3
+{{ codename }}_V4
+{{ codename }}_V5
+---------
+
+In order to help us process your programs efficiently,
+we will be using several scripts to collect the code out of the
+dropbox and deliver it to the professors. If you do not use the
+name(s) above, we will not be able to find your lab and it will
+NOT be graded.
+
+Furthermore, before you submit your final version, please keep
+the following reminders in mind:
+---------
+* Each file of code you
+submit, MUST contain your name in a comment at the top. For
+example:
+
+/**
+ * This is some description of a class...
+ *
+ * @author {{ fname }} {{ lname }}
+ * @version November 25, 2015
+ */
+
+* Extra credit will only be evaluated if you tell us what you
+did! At the top of the main class, please include a comment that
+lists the extra credit that you completed.
+
+* If you are using different run configurations than those
+specified in the starter code, tell us in your header comment so
+that we can run your program in the correct size and
+configuration! It's very hard for us to guess!
+---------
+
+Please do not hesitate to
+reach out to us on Piazza if you have questions regarding
+submitting your program.
+
+Happy coding!
+
+Best,
+CS051 TAs
+
+This email has been automatically created and sent. If you
+have any questions or need to get in contact with the professors
+or the TA, please use Piazza ( https://piazza.com/ ). Do NOT
+reply directly to this email.
